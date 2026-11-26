@@ -1,0 +1,1664 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>明日方舟抽数计算器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg1: #1b2233;
+      --bg2: #2a3550;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --ink-soft: #6b7280;
+      --line: #e5e7eb;
+      --brand: #ff8a00;
+      --brand-2: #ffb545;
+      --blue: #2563eb;
+      --purple: #8b5cf6;
+      --teal: #06b6d4;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #3a4a72 0%, transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, #6b3d12 0%, transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px 60px;
+    }
+
+    .app { width: 100%; max-width: 720px; }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 0 6px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(255, 138, 0, .45);
+      flex-shrink: 0;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #fff;
+    }
+
+    .logo img { width: 100%; height: 100%; object-fit: cover; }
+
+    .header h1 { 
+      margin: 0; 
+      font-size: 32px; 
+      font-family: 'Playfair Display', 'STKaiti', 'KaiTi', '楷体', serif;
+      font-style: italic; 
+      font-weight: 700;
+      color: #fff; 
+      letter-spacing: 2px;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+    }
+
+    .card + .card { margin-top: 16px; }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 6px;
+      height: 16px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, var(--brand), var(--brand-2));
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* 资源：三列（现有合成玉 / 现有源石 / 现有寻访凭证） */
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+    @media (max-width: 620px) {
+      .grid.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .field input[type="text"],
+    .field input[type="date"] {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--line);
+      border-radius: 11px;
+      font-size: 15px;
+      color: var(--ink);
+      background: #fbfcff;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--brand);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(255, 138, 0, .15);
+    }
+
+    .today-box {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 11px;
+      background: #f3f5fb;
+      border: 1.5px dashed #d5dbeb;
+      font-size: 15px;
+      color: var(--ink);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .today-box .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,.18);
+    }
+
+    .date-info { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .pill.orange {
+      background: #fff4e6;
+      color: #b45309;
+      border: 1px solid #ffe0b5;
+    }
+
+    .pill.orange b { color: #ea580c; font-size: 16px; }
+    .pill .hint { font-size: 11px; font-weight: 500; color: #b45309; opacity: .75; }
+
+    /* 结果区域的双蓝条 */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 560px) {
+      .result-grid { grid-template-columns: 1fr; }
+    }
+
+    .result-banner {
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #eef4ff, #f7f9ff);
+      border: 1px solid #dbe6ff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .result-banner .label { font-size: 14px; color: var(--blue); font-weight: 700; }
+    .result-banner .value { font-size: 26px; font-weight: 900; color: var(--blue); letter-spacing: .5px; }
+
+    /* 源石交易所的氪金结算：金色，和上面详情的蓝色横幅区分 */
+    .result-banner.paid {
+      background: linear-gradient(135deg, #fffbeb, #fffdf7);
+      border-color: #fde68a;
+    }
+    .result-banner.paid .label { color: #b45309; }
+    .result-banner.paid .value { color: #d97706; }
+
+    /* 明细标签排版（分左右两列） */
+    .detail-tags-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 560px) {
+      .detail-tags-grid { grid-template-columns: 1fr; }
+    }
+
+    .tags-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-content: flex-start;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #f4f6fb;
+      border: 1px solid #e3e8f3;
+      color: #3b4668;
+    }
+
+    .tag b { color: var(--blue); font-size: 15px; }
+    
+    /* 月卡标签样式 */
+    .tag.monthly-tag {
+      background: #f5f3ff;
+      border-color: #ddd6fe;
+      color: #6d28d9;
+    }
+    .tag.monthly-tag b { color: #8b5cf6; }
+
+    /* 隐藏资源标签样式 */
+    .tag.hidden-tag {
+      background: #ecfeff;
+      border-color: #a5f3fc;
+      color: #0e7490;
+    }
+    .tag.hidden-tag b { color: #06b6d4; }
+
+    /* 绿票商店合成玉标签样式 */
+    .tag.cert-tag {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+    .tag.cert-tag b { color: #16a34a; }
+
+    /* 氪金源石标签样式 */
+    .tag.paid-tag {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+    .tag.paid-tag b { color: #d97706; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 560px) {
+      .summary { grid-template-columns: 1fr; }
+    }
+
+    .summary-item {
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-item::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .summary-item.jade { background: linear-gradient(160deg, #f5f9ff, #fff); }
+    .summary-item.jade::after { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+    .summary-item.jade .big { color: #1d4ed8; }
+
+    .summary-item.stone { background: linear-gradient(160deg, #fff9f0, #fff); }
+    .summary-item.stone::after { background: linear-gradient(180deg, #ffb545, #ff8a00); }
+    .summary-item.stone .big { color: #ea580c; }
+
+    .summary-item .label { font-size: 13px; font-weight: 700; color: var(--ink-soft); letter-spacing: .5px; }
+    .summary-item .big { font-size: 30px; font-weight: 900; margin-top: 8px; letter-spacing: .5px; line-height: 1.1; }
+
+    .summary-item .sub {
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      padding-top: 10px;
+      border-top: 1px dashed #eadfce;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .summary-item .sub span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .summary-item .sub b { color: #ea580c; font-size: 14px; }
+
+    /* 合成玉总数下面的小字批注（蓝色，与源石那块区分） */
+    .summary-item.jade .sub { border-top-color: #dbe6ff; }
+    .summary-item.jade .sub b { color: #1d4ed8; }
+
+    .crush-row {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #fff7ec, #fff);
+      border: 1.5px solid #ffe3bf;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .crush-row:hover { border-color: #ffcd8a; box-shadow: 0 6px 18px rgba(255,138,0,.12); }
+
+    .crush-row input[type="checkbox"] {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      border: 2px solid #ffb545;
+      background: #fff;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: background .15s, border-color .15s;
+    }
+
+    .crush-row input[type="checkbox"]:checked {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      border-color: var(--brand);
+    }
+
+    .crush-row input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid #fff;
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg);
+    }
+
+    .crush-row .crush-text { font-size: 15px; font-weight: 700; color: #9a3412; }
+    .crush-row .crush-desc { font-size: 12px; color: #b45309; opacity: .8; margin-top: 2px; }
+
+    /* 黄票阶段兑换：5 级标签 */
+    .stage-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stage-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #92400e;
+      background: #fff;
+      border: 1.5px solid #fde68a;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+
+    .stage-item input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .stage-item.on {
+      background: linear-gradient(135deg, #f59e0b, #fcd34d);
+      border-color: #f59e0b;
+      color: #fff;
+    }
+
+    /* 源石交易所 */
+    .shop-toggle-row {
+      background: linear-gradient(135deg, #eff6ff, #fff);
+      border-color: #bfdbfe;
+    }
+    .shop-toggle-row:hover { border-color: #93c5fd; box-shadow: 0 6px 18px rgba(59,130,246,.12); }
+    .shop-toggle-row .crush-text { color: #1d4ed8; }
+    .shop-toggle-row .crush-desc { color: #2563eb; }
+    .shop-toggle-row input[type="checkbox"] { border-color: #93c5fd; }
+    .shop-toggle-row input[type="checkbox"]:checked {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      border-color: #3b82f6;
+    }
+
+    .pack-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pack-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1.5px solid var(--line);
+    }
+
+    .pack-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 78px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e3a8a;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .pack-check input[type="checkbox"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid #bfdbfe;
+      background: #fff;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: background .15s, border-color .15s;
+    }
+
+    .pack-check input[type="checkbox"]:checked {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      border-color: #3b82f6;
+    }
+
+    .pack-check input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 1px;
+      width: 5px;
+      height: 10px;
+      border: solid #fff;
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg);
+    }
+
+    .pack-desc {
+      flex: 1;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+    }
+
+    .pack-count {
+      width: 64px;
+      padding: 7px 10px;
+      border: 1.5px solid var(--line);
+      border-radius: 9px;
+      font-size: 14px;
+      text-align: center;
+      color: var(--ink);
+      background: #fbfcff;
+      outline: none;
+    }
+
+    .pack-count:focus { border-color: var(--brand); background: #fff; }
+    .pack-count:disabled { background: #f3f4f6; color: #c0c4cc; border-color: #eef0f4; }
+
+    /* 每档的首充 / 非首充 切换 */
+    .pack-mode {
+      display: inline-flex;
+      border: 1.5px solid #dbe3f0;
+      border-radius: 9px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .pack-mode-btn {
+      border: 0;
+      background: #fff;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .pack-mode-btn.on {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      color: #fff;
+    }
+
+    .pack-sub {
+      min-width: 104px;
+      text-align: right;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1d4ed8;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 620px) {
+      .pack-row { flex-wrap: wrap; }
+      .pack-desc { flex-basis: 100%; order: 3; }
+      .pack-sub { order: 4; text-align: left; }
+    }
+
+    .pull-card {
+      padding: 20px 22px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ecfdf5, #f7fffb);
+      border: 1px solid #bbf7d0;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pull-card::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      border-radius: 5px 0 0 5px;
+      background: linear-gradient(180deg, #34d399, #059669);
+    }
+
+    .pull-card .pull-label { font-size: 15px; font-weight: 800; color: #047857; letter-spacing: .5px; }
+    .pull-card .pull-hint { display: block; margin-top: 4px; font-size: 12px; font-weight: 500; color: #059669; opacity: .75; }
+    .pull-card .pull-value { font-size: 38px; font-weight: 900; color: #059669; line-height: 1; letter-spacing: .5px; }
+    .pull-card .pull-value small { font-size: 15px; font-weight: 700; color: #047857; margin-left: 4px; }
+
+    /* 总抽数专属配色（玫红，区别于寻访凭证总数的绿色） */
+    .pull-card.total {
+      background: linear-gradient(135deg, #fff1f2, #fff);
+      border-color: #fecdd3;
+    }
+
+    .pull-card.total::after { background: linear-gradient(180deg, #fb7185, #e11d48); }
+    .pull-card.total .pull-label { color: #9f1239; }
+    .pull-card.total .pull-hint { color: #be123c; }
+    .pull-card.total .pull-hint b { color: #9f1239; }
+    .pull-card.total .pull-value { color: #e11d48; }
+    .pull-card.total .pull-value small { color: #9f1239; }
+
+    /* 月卡专属样式 */
+    .monthly-toggle-row {
+      margin-top: 0;
+      background: linear-gradient(135deg, #f5f3ff, #fff);
+      border-color: #ddd6fe;
+    }
+    .monthly-toggle-row:hover { border-color: #c4b5fd; box-shadow: 0 6px 18px rgba(139,92,246,.12); }
+    .monthly-toggle-row .crush-text { color: #6d28d9; }
+    .monthly-toggle-row .crush-desc { color: #7e22ce; }
+    .monthly-toggle-row input[type="checkbox"] { border-color: #a78bfa; }
+    .monthly-toggle-row input[type="checkbox"]:checked {
+      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      border-color: #8b5cf6;
+    }
+
+    .monthly-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f5f3ff, #fff);
+      border: 1.5px solid #ddd6fe;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .monthly-card::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      border-radius: 5px 0 0 5px;
+      background: linear-gradient(180deg, #a78bfa, #8b5cf6);
+    }
+
+    .monthly-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #6d28d9;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .monthly-title::before {
+      content: "";
+      width: 6px;
+      height: 16px;
+      border-radius: 4px;
+      background: #8b5cf6;
+    }
+
+    .monthly-summary {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #ddd6fe;
+    }
+
+    .monthly-summary-item {
+      flex: 1 1 140px;
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #ddd6fe;
+    }
+
+    .monthly-summary-item .label { font-size: 12px; color: #7e22ce; font-weight: 600; }
+    .monthly-summary-item .big { font-size: 22px; font-weight: 900; color: #6d28d9; margin-top: 4px; }
+
+    /* 隐藏资源专属样式 */
+    .hidden-toggle-row {
+      margin-top: 0;
+      background: linear-gradient(135deg, #ecfeff, #fff);
+      border-color: #a5f3fc;
+    }
+    .hidden-toggle-row:hover { border-color: #67e8f9; box-shadow: 0 6px 18px rgba(6,182,212,.12); }
+    .hidden-toggle-row .crush-text { color: #0e7490; }
+    .hidden-toggle-row .crush-desc { color: #0891b2; }
+    .hidden-toggle-row input[type="checkbox"] { border-color: #67e8f9; }
+    .hidden-toggle-row input[type="checkbox"]:checked {
+      background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      border-color: #06b6d4;
+    }
+
+    .hidden-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ecfeff, #fff);
+      border: 1.5px solid #a5f3fc;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hidden-card::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      border-radius: 5px 0 0 5px;
+      background: linear-gradient(180deg, #22d3ee, #06b6d4);
+    }
+
+    .hidden-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0e7490;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hidden-title::before {
+      content: "";
+      width: 6px;
+      height: 16px;
+      border-radius: 4px;
+      background: #06b6d4;
+    }
+
+    .hidden-summary {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #a5f3fc;
+    }
+
+    .hidden-summary-item {
+      flex: 1 1 140px;
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #a5f3fc;
+    }
+
+    .hidden-summary-item .label { font-size: 12px; color: #0e7490; font-weight: 600; }
+    .hidden-summary-item .big { font-size: 22px; font-weight: 900; color: #0e7490; margin-top: 4px; }
+
+    /* 凭证交易所专属样式 */
+    .green-cert-row { background: linear-gradient(135deg, #f0fdf4, #fff); border-color: #bbf7d0; }
+    .green-cert-row:hover { border-color: #86efac; box-shadow: 0 6px 18px rgba(34,197,94,.12); }
+    .green-cert-row .crush-text { color: #166534; }
+    .green-cert-row .crush-desc { color: #15803d; }
+    .green-cert-row input[type="checkbox"] { border-color: #4ade80; }
+    .green-cert-row input[type="checkbox"]:checked { background: linear-gradient(135deg, #22c55e, #4ade80); border-color: #22c55e; }
+
+    .yellow-cert-row { background: linear-gradient(135deg, #fffbeb, #fff); border-color: #fde68a; }
+    .yellow-cert-row:hover { border-color: #fcd34d; box-shadow: 0 6px 18px rgba(245,158,11,.12); }
+    .yellow-cert-row .crush-text { color: #92400e; }
+    .yellow-cert-row .crush-desc { color: #b45309; }
+    .yellow-cert-row input[type="checkbox"] { border-color: #fcd34d; }
+    .yellow-cert-row input[type="checkbox"]:checked { background: linear-gradient(135deg, #f59e0b, #fcd34d); border-color: #f59e0b; }
+
+    .footer { text-align: center; margin-top: 22px; font-size: 12px; color: rgba(255,255,255,.45); }
+
+    .footer + .footer { margin-top: 8px; }
+
+    .footer a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,.25);
+      transition: color .15s, border-color .15s;
+    }
+
+    .footer a:hover {
+      color: rgba(255,255,255,.85);
+      border-bottom-color: rgba(255,255,255,.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="logo">
+        <img src="DIAMOND_SHD.png" alt="源石">
+      </div>
+      <div>
+        <h1>明日方舟抽数计算器</h1>
+      </div>
+    </div>
+
+    <!-- 资源输入 -->
+    <div class="card">
+      <div class="section-title">资源</div>
+      <div class="grid cols-3">
+        <div class="field">
+          <label>现有合成玉</label>
+          <input id="a" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+        </div>
+        <div class="field">
+          <label>现有源石</label>
+          <input id="b" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+        </div>
+        <div class="field">
+          <label>现有寻访凭证</label>
+          <input id="voucher" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 时间 -->
+    <div class="card">
+      <div class="section-title">时间</div>
+      <div class="grid">
+        <div class="field">
+          <label>现在日期</label>
+          <div class="today-box"><span class="dot"></span><span id="todayText"></span></div>
+        </div>
+        <div class="field">
+          <label>最终日期</label>
+          <input id="endDate" type="date" onchange="calc()">
+        </div>
+      </div>
+
+      <div class="date-info">
+        <span class="pill orange">天数：<b id="dayCount">0</b></span>
+        <span class="pill orange">周数：<b id="weekCount">0</b> <span class="hint">（不满一周不计）</span></span>
+      </div>
+    </div>
+
+    <!-- 月卡独立板块 -->
+    <div class="card" style="padding-bottom: 22px;">
+      <div class="section-title">月卡</div>
+      <label class="crush-row monthly-toggle-row" style="margin-top: 0;">
+        <input type="checkbox" id="monthlyCardCheck" onchange="toggleMonthlyCard()">
+        <span>
+          <span class="crush-text">启用月卡计算</span>
+        </span>
+      </label>
+
+      <!-- 月卡详细信息板块（默认隐藏） -->
+      <div class="monthly-card" id="monthlyCardPanel" style="display: none;">
+        <div class="monthly-title">月卡详情</div>
+        
+        <div class="grid">
+          <div class="field">
+            <label>月卡到期天数</label>
+            <input id="monthlyDays" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+          </div>
+          <div class="field">
+            <label>还需要额外购买几张月卡</label>
+            <input id="monthlyCount" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+          </div>
+        </div>
+
+        <div class="monthly-summary">
+          <div class="monthly-summary-item">
+            <div class="label">月卡合成玉</div>
+            <div class="big" id="monthlyJade">0</div>
+          </div>
+          <div class="monthly-summary-item">
+            <div class="label">月卡源石</div>
+            <div class="big" id="monthlyStone">0</div>
+          </div>
+        </div>
+        <div class="input-hint" id="monthlyDaysHint" style="margin-top: 10px; color: #7e22ce; font-weight: 600;">实际计算天数：0 天</div>
+      </div>
+    </div>
+
+    <!-- 凭证交易所独立板块 -->
+    <div class="card" style="padding-bottom: 22px;">
+      <div class="section-title">凭证交易所</div>
+      
+      <!-- 绿票商店 -->
+      <label class="crush-row green-cert-row" style="margin-top: 0;">
+        <input type="checkbox" id="greenCertCheck" checked onchange="calc()">
+        <span>
+          <span class="crush-text">绿票商店</span>
+          <span class="crush-desc">可兑换次数：<b id="greenMaxCount">0</b> 次</span>
+        </span>
+      </label>
+      <!-- 绿票当前兑换详情展示（随兑换次数变化） -->
+      <div class="input-hint" id="greenDetail" style="margin-top: 8px; margin-left: 34px; color: #15803d; display: block;">
+        当前兑换次数：<b id="greenExchangeCount">0</b> 次（每次：一阶段 2 张寻访凭证、6 个 100 合成玉；二阶段 2 张寻访凭证）<br>
+        预计消耗绿票：<b id="greenTicketCost">0</b> 张，获得：<b id="greenJadeOut">0</b> 合成玉、<b id="greenVoucherOut">0</b> 张寻访凭证
+      </div>
+
+      <!-- 三阶段合成玉（仅考虑兑换合成玉的无限兑换） -->
+      <div style="margin-top: 14px; margin-left: 10px;">
+        <label class="crush-row green-cert-row" style="margin-top: 0;">
+          <input type="checkbox" id="stage3Check" onchange="toggleStage3()">
+          <span>
+            <span class="crush-text">三阶段合成玉</span>
+            <span class="crush-desc">每份 30 合成玉 / 消耗 50 绿票｜开启需 9600 绿票</span>
+          </span>
+        </label>
+
+        <div class="field" id="stage3Panel" style="margin-top: 12px; display: none;">
+          <label>现有绿票数量</label>
+          <input id="stage3Tickets" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+          <div class="input-hint" style="margin-top: 4px;">计算仅考虑兑换完二阶段寻访凭证</div>
+          <div class="input-hint" id="stage3Detail" style="margin-top: 6px; color: #15803d; font-weight: 600;">
+            绿票可兑换合成玉：<b id="stage3Jade">0</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- 黄票商店 -->
+      <div style="margin-top: 16px;">
+        <label class="crush-row yellow-cert-row" style="margin-top: 0;">
+          <input type="checkbox" id="yellowCertCheck" onchange="toggleYellowCert()">
+          <span>
+            <span class="crush-text">黄票商店</span>
+            <span class="crush-desc">可兑换次数：<b id="yellowMaxCount">0</b> 次</span>
+          </span>
+        </label>
+        
+        <!-- 黄票自选次数 -->
+        <div class="field" id="yellowInputPanel" style="margin-top: 12px; margin-left: 10px; display: none;">
+          <label>兑换次数</label>
+          <input id="yellowInput" type="text" inputmode="numeric" value="0" oninput="handleYellowInput()" onfocus="this.select()">
+          <div class="input-hint" id="yellowHint" style="display: none; color: #d97706; font-weight: 600;">已自动调整为最大可兑换次数</div>
+
+          <!-- 阶段兑换（只影响最后一次兑换） -->
+          <label class="crush-row yellow-cert-row" style="margin-top: 14px;">
+            <input type="checkbox" id="levelCheck" onchange="toggleLevels()">
+            <span>
+              <span class="crush-text">阶段兑换</span>
+              <span class="crush-desc">仅用于最后一次兑换不满的情况</span>
+            </span>
+          </label>
+
+          <div id="levelPanel" style="margin-top: 12px; margin-left: 10px; display: none;">
+            <div class="stage-list">
+              <label class="stage-item" id="levelItem1"><input type="checkbox" id="level1" onchange="onLevelChange(1)"><span id="levelLabel1">1 级</span></label>
+              <label class="stage-item" id="levelItem2"><input type="checkbox" id="level2" onchange="onLevelChange(2)"><span id="levelLabel2">2 级</span></label>
+              <label class="stage-item" id="levelItem3"><input type="checkbox" id="level3" onchange="onLevelChange(3)"><span id="levelLabel3">3 级</span></label>
+              <label class="stage-item" id="levelItem4"><input type="checkbox" id="level4" onchange="onLevelChange(4)"><span id="levelLabel4">4 级</span></label>
+              <label class="stage-item" id="levelItem5"><input type="checkbox" id="level5" onchange="onLevelChange(5)"><span id="levelLabel5">5 级</span></label>
+            </div>
+            <div class="input-hint" id="levelDetail" style="margin-top: 8px; color: #b45309;">
+              阶段兑换可得：<b id="levelVoucherOut">0</b> 张寻访凭证，消耗黄票：<b id="levelTicketCost">0</b> 张
+            </div>
+          </div>
+
+          <!-- 黄票合计（放在阶段兑换下面） -->
+          <div class="input-hint" id="yellowDetail" style="margin-top: 10px; color: #b45309;">
+            每次完整兑换花费 258 张黄票兑换 38 张寻访凭证；完整兑换 <b id="yellowFullTimes">0</b> 次，合计消耗黄票 <b id="yellowTicketCost">0</b> 张，获得寻访凭证 <b id="yellowVoucherOut">0</b> 张
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 隐藏资源独立板块 -->
+    <div class="card" style="padding-bottom: 22px;">
+      <div class="section-title">隐藏资源</div>
+      <label class="crush-row hidden-toggle-row" style="margin-top: 0;">
+        <input type="checkbox" id="hiddenResCheck" onchange="toggleHiddenRes()">
+        <span>
+          <span class="crush-text">启用隐藏资源计算</span>
+        </span>
+      </label>
+
+      <!-- 隐藏资源详细信息板块（默认隐藏） -->
+      <div class="hidden-card" id="hiddenResPanel" style="display: none;">
+        <div class="hidden-title">隐藏详情</div>
+        
+        <div class="grid">
+          <div class="field">
+            <label>悖论模拟</label>
+            <input id="hiddenParadox" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+          </div>
+          <div class="field">
+            <label>未完成关卡</label>
+            <input id="hiddenStages" type="text" inputmode="numeric" value="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <div class="input-hint">主线或者支线关卡</div>
+          </div>
+        </div>
+
+        <div class="hidden-summary">
+          <div class="hidden-summary-item">
+            <div class="label">隐藏合成玉</div>
+            <div class="big" id="hiddenJade">0</div>
+          </div>
+          <div class="hidden-summary-item">
+            <div class="label">隐藏源石</div>
+            <div class="big" id="hiddenStone">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 源石交易所独立板块 -->
+    <div class="card" style="padding-bottom: 22px;">
+      <div class="section-title">源石交易所</div>
+      <label class="crush-row shop-toggle-row" style="margin-top: 0;">
+        <input type="checkbox" id="shopCheck" onchange="toggleShop()">
+        <span>
+          <span class="crush-text">启用源石交易所</span>
+        </span>
+      </label>
+
+      <div id="shopPanel" style="display: none; margin-top: 16px;">
+        <!-- 6 个档位，可多选、可重复购买；每档单独选首充/非首充 -->
+        <div class="pack-list">
+          <div class="pack-row">
+            <label class="pack-check"><input type="checkbox" id="packCheck1" onchange="togglePack(1)"><span>￥6</span></label>
+            <span class="pack-desc" id="packDesc1">首充 3 / 非首充 1 源石</span>
+            <div class="pack-mode">
+              <button type="button" class="pack-mode-btn on" id="packFirst1" onclick="setPackMode(1, true)">首充</button>
+              <button type="button" class="pack-mode-btn" id="packNormal1" onclick="setPackMode(1, false)">非首充</button>
+            </div>
+            <input class="pack-count" id="packCount1" type="text" inputmode="numeric" value="1" disabled oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <span class="pack-sub" id="packSub1">—</span>
+          </div>
+          <div class="pack-row">
+            <label class="pack-check"><input type="checkbox" id="packCheck2" onchange="togglePack(2)"><span>￥30</span></label>
+            <span class="pack-desc" id="packDesc2">首充 12 / 非首充 7 源石</span>
+            <div class="pack-mode">
+              <button type="button" class="pack-mode-btn on" id="packFirst2" onclick="setPackMode(2, true)">首充</button>
+              <button type="button" class="pack-mode-btn" id="packNormal2" onclick="setPackMode(2, false)">非首充</button>
+            </div>
+            <input class="pack-count" id="packCount2" type="text" inputmode="numeric" value="1" disabled oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <span class="pack-sub" id="packSub2">—</span>
+          </div>
+          <div class="pack-row">
+            <label class="pack-check"><input type="checkbox" id="packCheck3" onchange="togglePack(3)"><span>￥98</span></label>
+            <span class="pack-desc" id="packDesc3">首充 40 / 非首充 24 源石</span>
+            <div class="pack-mode">
+              <button type="button" class="pack-mode-btn on" id="packFirst3" onclick="setPackMode(3, true)">首充</button>
+              <button type="button" class="pack-mode-btn" id="packNormal3" onclick="setPackMode(3, false)">非首充</button>
+            </div>
+            <input class="pack-count" id="packCount3" type="text" inputmode="numeric" value="1" disabled oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <span class="pack-sub" id="packSub3">—</span>
+          </div>
+          <div class="pack-row">
+            <label class="pack-check"><input type="checkbox" id="packCheck4" onchange="togglePack(4)"><span>￥198</span></label>
+            <span class="pack-desc" id="packDesc4">首充 80 / 非首充 50 源石</span>
+            <div class="pack-mode">
+              <button type="button" class="pack-mode-btn on" id="packFirst4" onclick="setPackMode(4, true)">首充</button>
+              <button type="button" class="pack-mode-btn" id="packNormal4" onclick="setPackMode(4, false)">非首充</button>
+            </div>
+            <input class="pack-count" id="packCount4" type="text" inputmode="numeric" value="1" disabled oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <span class="pack-sub" id="packSub4">—</span>
+          </div>
+          <div class="pack-row">
+            <label class="pack-check"><input type="checkbox" id="packCheck5" onchange="togglePack(5)"><span>￥328</span></label>
+            <span class="pack-desc" id="packDesc5">首充 132 / 非首充 90 源石</span>
+            <div class="pack-mode">
+              <button type="button" class="pack-mode-btn on" id="packFirst5" onclick="setPackMode(5, true)">首充</button>
+              <button type="button" class="pack-mode-btn" id="packNormal5" onclick="setPackMode(5, false)">非首充</button>
+            </div>
+            <input class="pack-count" id="packCount5" type="text" inputmode="numeric" value="1" disabled oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <span class="pack-sub" id="packSub5">—</span>
+          </div>
+          <div class="pack-row">
+            <label class="pack-check"><input type="checkbox" id="packCheck6" onchange="togglePack(6)"><span>￥648</span></label>
+            <span class="pack-desc" id="packDesc6">首充 260 / 非首充 185 源石</span>
+            <div class="pack-mode">
+              <button type="button" class="pack-mode-btn on" id="packFirst6" onclick="setPackMode(6, true)">首充</button>
+              <button type="button" class="pack-mode-btn" id="packNormal6" onclick="setPackMode(6, false)">非首充</button>
+            </div>
+            <input class="pack-count" id="packCount6" type="text" inputmode="numeric" value="1" disabled oninput="this.value = this.value.replace(/[^0-9]/g, ''); calc()" onfocus="this.select()">
+            <span class="pack-sub" id="packSub6">—</span>
+          </div>
+        </div>
+
+        <!-- 氪金结算（金色，和详情的蓝色横幅区分） -->
+        <div class="result-grid" style="margin-top: 16px;">
+          <div class="result-banner paid">
+            <span class="label">氪金获得的源石</span>
+            <span class="value" id="paidStone">0</span>
+          </div>
+          <div class="result-banner paid">
+            <span class="label">总计花费金额</span>
+            <span class="value" id="paidCost">￥0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 详情 -->
+    <div class="card">
+      <div class="section-title">详情</div>
+
+      <!-- 可获得合成玉 & 可获得源石 并排 -->
+      <div class="result-grid">
+        <div class="result-banner">
+          <span class="label">可获得合成玉</span>
+          <span class="value" id="result">0</span>
+        </div>
+        <div class="result-banner">
+          <span class="label">可获得源石</span>
+          <span class="value" id="bGain">0</span>
+        </div>
+      </div>
+
+      <!-- 明细标签（分两列对齐） -->
+      <div class="detail-tags-grid">
+        <!-- 左列：合成玉明细 -->
+        <div class="tags-group">
+          <span class="tag">每日合成玉 <b id="dailyTag">0</b></span>
+          <span class="tag">每周合成玉 <b id="weeklyTag">0</b></span>
+          <span class="tag">剿灭 <b id="elimTag">0</b></span>
+          <span class="tag monthly-tag" id="monthlyJadeTagBox" style="display: none;">月卡合成玉 <b id="monthlyJadeTag">0</b></span>
+          <span class="tag hidden-tag" id="hiddenJadeTagBox" style="display: none;">隐藏合成玉 <b id="hiddenJadeTag">0</b></span>
+          <span class="tag cert-tag" id="certJadeTagBox" style="display: none;">绿票商店合成玉 <b id="certJadeTag">0</b></span>
+        </div>
+        
+        <!-- 右列：源石明细 -->
+        <div class="tags-group">
+          <span class="tag monthly-tag" id="monthlyStoneTagBox" style="display: none;">月卡源石 <b id="monthlyStoneTag">0</b></span>
+          <span class="tag hidden-tag" id="hiddenStoneTagBox" style="display: none;">隐藏源石 <b id="hiddenStoneTag">0</b></span>
+          <span class="tag paid-tag" id="paidStoneTagBox" style="display: none;">氪金源石 <b id="paidStoneTag">0</b></span>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="summary-item jade">
+          <div class="label">合成玉总数</div>
+          <div class="big" id="jadeTotal">0</div>
+          <div class="sub">
+            <span>可兑换的抽数：<b id="jadeToPulls">0</b></span>
+          </div>
+        </div>
+        <div class="summary-item stone">
+          <div class="label">源石总数</div>
+          <div class="big" id="stoneTotal">0</div>
+          <div class="sub">
+            <span>可换合成玉数：<b id="stoneToJade">0</b></span>
+            <span>可换抽数：<b id="stoneToPulls">0.0</b></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 寻访凭证总数（现有 + 凭证商店） -->
+      <div class="pull-card" style="margin-top: 16px;">
+        <div>
+          <div class="pull-label">寻访凭证总数</div>
+          <span class="pull-hint">现有 <b id="voucherNowTag">0</b> + 绿票 <b id="voucherGreenTag">0</b> + 黄票 <b id="voucherYellowTag">0</b></span>
+        </div>
+        <div class="pull-value"><span id="voucherTotal">0</span><small>张</small></div>
+      </div>
+    </div>
+
+    <!-- 结果 -->
+    <div class="card">
+      <div class="section-title">结果</div>
+
+      <label class="crush-row" style="margin-top: 0;">
+        <input type="checkbox" id="crush" onchange="calc()">
+        <span>
+          <span class="crush-text">碎石头</span>
+          <span class="crush-desc">1源石=180合成玉</span>
+        </span>
+      </label>
+
+      <!-- 总抽数 -->
+      <div class="pull-card total" style="margin-top: 16px;">
+        <div>
+          <div class="pull-label">总抽数</div>
+          <span class="pull-hint">合成玉 <b id="jadePullPart">0</b> 抽 + 寻访凭证 <b id="voucherPullPart">0</b> 抽</span>
+        </div>
+        <div class="pull-value"><span id="pullCount">0</span><small>抽</small></div>
+      </div>
+    </div>
+
+    <div class="footer">本地计算，数据不上传</div>
+    <div class="footer"><a href="https://space.bilibili.com/18481328?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer">B站：@北极blue-</a></div>
+  </div>
+
+  <script>
+    // 初始化日期
+    function getTodayStr() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + day;
+    }
+
+    const today = getTodayStr();
+    document.getElementById("todayText").textContent = today;
+    
+    const endInput = document.getElementById("endDate");
+    endInput.min = today;
+
+    // ---------------- 源石交易所：档位数据 ----------------
+    // 每档：价格 / 首充可得源石 / 非首充可得源石
+    const PACKS = [
+      { price: 6,   first: 1 + 2,     normal: 1 },        // ￥6   首充 3  / 非首充 1
+      { price: 30,  first: 6 + 6,     normal: 6 + 1 },    // ￥30  首充 12 / 非首充 7
+      { price: 98,  first: 20 + 20,   normal: 20 + 4 },   // ￥98  首充 40 / 非首充 24
+      { price: 198, first: 40 + 40,   normal: 40 + 10 },  // ￥198 首充 80 / 非首充 50
+      { price: 328, first: 66 + 66,   normal: 66 + 24 },  // ￥328 首充 132/ 非首充 90
+      { price: 648, first: 130 + 130, normal: 130 + 55 }  // ￥648 首充 260/ 非首充 185
+    ];
+
+    // 每个档位当前选的是不是首充（默认全部按首充）
+    const packFirst = {};
+    for (let i = 1; i <= PACKS.length; i++) packFirst[i] = true;
+
+    // 切换月卡板块显示
+    function toggleMonthlyCard() {
+      const isChecked = document.getElementById("monthlyCardCheck").checked;
+      document.getElementById("monthlyCardPanel").style.display = isChecked ? "block" : "none";
+      calc();
+    }
+
+    // 切换隐藏资源板块显示
+    function toggleHiddenRes() {
+      const isChecked = document.getElementById("hiddenResCheck").checked;
+      document.getElementById("hiddenResPanel").style.display = isChecked ? "block" : "none";
+      calc();
+    }
+
+    // 切换黄票输入框显示
+    function toggleYellowCert() {
+      const isChecked = document.getElementById("yellowCertCheck").checked;
+      document.getElementById("yellowInputPanel").style.display = isChecked ? "block" : "none";
+      calc();
+    }
+
+    // 切换三阶段合成玉输入框显示
+    function toggleStage3() {
+      const isChecked = document.getElementById("stage3Check").checked;
+      document.getElementById("stage3Panel").style.display = isChecked ? "block" : "none";
+      calc();
+    }
+
+    // 切换黄票阶段兑换的 5 个等级
+    function toggleLevels() {
+      const isChecked = document.getElementById("levelCheck").checked;
+      document.getElementById("levelPanel").style.display = isChecked ? "block" : "none";
+      calc();
+    }
+
+    // 阶段联动：勾选某级则前面各级一并勾上；取消某级则本级及之后全部取消
+    function onLevelChange(level) {
+      const isChecked = document.getElementById("level" + level).checked;
+      if (isChecked) {
+        for (let i = 1; i <= level; i++) document.getElementById("level" + i).checked = true;
+      } else {
+        for (let i = level; i <= 5; i++) document.getElementById("level" + i).checked = false;
+      }
+      syncLevelStyles();
+      calc();
+    }
+
+    // 让标签的高亮状态跟勾选状态一致
+    function syncLevelStyles() {
+      for (let i = 1; i <= 5; i++) {
+        const item = document.getElementById("levelItem" + i);
+        const on = document.getElementById("level" + i).checked;
+        if (on) { item.classList.add("on"); } else { item.classList.remove("on"); }
+      }
+    }
+
+    // 切换源石交易所面板
+    function toggleShop() {
+      const isChecked = document.getElementById("shopCheck").checked;
+      document.getElementById("shopPanel").style.display = isChecked ? "block" : "none";
+      calc();
+    }
+
+    // 某个档位勾选时启用次数输入，默认 1 次
+    function togglePack(i) {
+      const isChecked = document.getElementById("packCheck" + i).checked;
+      const input = document.getElementById("packCount" + i);
+      input.disabled = !isChecked;
+      if (isChecked && !(Number(input.value) > 0)) input.value = "1";
+      calc();
+    }
+
+    // 每个档位单独切换首充 / 非首充
+    function setPackMode(i, isFirst) {
+      packFirst[i] = isFirst === true;
+      document.getElementById("packFirst" + i).classList.toggle("on", isFirst === true);
+      document.getElementById("packNormal" + i).classList.toggle("on", isFirst !== true);
+      calc();
+    }
+
+    // 黄票输入实时处理
+    function handleYellowInput() {
+      const input = document.getElementById("yellowInput");
+      input.value = input.value.replace(/[^0-9]/g, '');
+      calc();
+    }
+
+    // 通用计算天数差
+    function getDaysDiff(end) {
+      if (!end) return 0;
+      if (end < today) return 0;
+      return Math.round((new Date(end + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000);
+    }
+
+    // 计算期间有几个1号
+    function getFirstDayCount(startStr, endStr) {
+      if (!startStr || !endStr) return 0;
+      const start = new Date(startStr + "T00:00:00");
+      const end = new Date(endStr + "T00:00:00");
+      if (start > end) return 0;
+
+      let count = 0;
+      let current = new Date(start.getFullYear(), start.getMonth(), 1);
+      
+      if (current < start) {
+        current.setMonth(current.getMonth() + 1);
+      }
+      
+      while (current <= end) {
+        count++;
+        current.setMonth(current.getMonth() + 1);
+      }
+      return count;
+    }
+
+    // 自动计算函数
+    function calc() {
+      // ---------------- 1. 基础收益 ----------------
+      const end = endInput.value;
+      const days = getDaysDiff(end);
+      const weeks = Math.floor(days / 7);
+
+      document.getElementById("dayCount").textContent = days;
+      document.getElementById("weekCount").textContent = weeks;
+
+      const daily = days * 100;
+      const weekly = weeks * 500;
+      const elim = weeks * 1800;
+      let gainJade = daily + weekly + elim;
+
+      // 更新基础标签
+      document.getElementById("dailyTag").textContent = daily;
+      document.getElementById("weeklyTag").textContent = weekly;
+      document.getElementById("elimTag").textContent = elim;
+
+      // ---------------- 2. 月卡收益 ----------------
+      let monthlyJade = 0;
+      let monthlyStone = 0;
+      let monthlyCalcDays = 0;
+
+      if (document.getElementById("monthlyCardCheck").checked) {
+        const daysInput = document.getElementById("monthlyDays");
+        let mDays = Number(daysInput.value) || 0;
+        const mCount = Number(document.getElementById("monthlyCount").value) || 0;
+
+        // 到期天数不能超过天数差
+        if (mDays > days) {
+          mDays = days;
+          daysInput.value = days;
+        }
+
+        // 到期天数 + 续费张数 × 30，最多算到天数差为止
+        monthlyCalcDays = Math.min(mDays + mCount * 30, days);
+        monthlyJade = monthlyCalcDays * 200;
+        monthlyStone = mCount * 6;
+      }
+
+      document.getElementById("monthlyDaysHint").textContent =
+        "实际计算天数：" + monthlyCalcDays + " 天（上限 " + days + " 天）";
+      
+      document.getElementById("monthlyJade").textContent = monthlyJade;
+      document.getElementById("monthlyStone").textContent = monthlyStone;
+
+      // 更新月卡标签（大于0才显示）
+      const monthlyJadeBox = document.getElementById("monthlyJadeTagBox");
+      if (monthlyJade > 0) {
+        document.getElementById("monthlyJadeTag").textContent = monthlyJade;
+        monthlyJadeBox.style.display = "inline-flex";
+      } else {
+        monthlyJadeBox.style.display = "none";
+      }
+
+      const monthlyStoneBox = document.getElementById("monthlyStoneTagBox");
+      if (monthlyStone > 0) {
+        document.getElementById("monthlyStoneTag").textContent = monthlyStone;
+        monthlyStoneBox.style.display = "inline-flex";
+      } else {
+        monthlyStoneBox.style.display = "none";
+      }
+
+      gainJade += monthlyJade;
+
+      // ---------------- 2.5 隐藏资源收益 ----------------
+      let hiddenJade = 0;
+      let hiddenStone = 0;
+      
+      if (document.getElementById("hiddenResCheck").checked) {
+        const paradox = Number(document.getElementById("hiddenParadox").value) || 0;
+        const stages = Number(document.getElementById("hiddenStages").value) || 0;
+        
+        hiddenJade = paradox * 200;
+        hiddenStone = stages * 1;
+      }
+      
+      document.getElementById("hiddenJade").textContent = hiddenJade;
+      document.getElementById("hiddenStone").textContent = hiddenStone;
+
+      // 更新隐藏资源标签（大于0才显示）
+      const hiddenJadeBox = document.getElementById("hiddenJadeTagBox");
+      if (hiddenJade > 0) {
+        document.getElementById("hiddenJadeTag").textContent = hiddenJade;
+        hiddenJadeBox.style.display = "inline-flex";
+      } else {
+        hiddenJadeBox.style.display = "none";
+      }
+
+      const hiddenStoneBox = document.getElementById("hiddenStoneTagBox");
+      if (hiddenStone > 0) {
+        document.getElementById("hiddenStoneTag").textContent = hiddenStone;
+        hiddenStoneBox.style.display = "inline-flex";
+      } else {
+        hiddenStoneBox.style.display = "none";
+      }
+
+      gainJade += hiddenJade;
+
+      // ---------------- 2.6 源石交易所（氪金） ----------------
+      // 6 个档位可多选、可重复购买；每档单独选首充/非首充
+      // 选首充时：该档第 1 次按首充，第 2 次起按非首充
+      let paidStone = 0;
+      let paidCost = 0;
+      const shopOn = document.getElementById("shopCheck").checked;
+
+      for (let i = 0; i < PACKS.length; i++) {
+        const idx = i + 1;
+        const checked = shopOn && document.getElementById("packCheck" + idx).checked;
+
+        // 档位说明每次都刷新，保证和 PACKS 数据一致
+        document.getElementById("packDesc" + idx).textContent =
+          "首充 " + PACKS[i].first + " / 非首充 " + PACKS[i].normal + " 源石";
+
+        if (!checked) {
+          document.getElementById("packSub" + idx).textContent = "—";
+          continue;
+        }
+
+        const times = Number(document.getElementById("packCount" + idx).value) || 0;
+        const useFirst = packFirst[idx] === true;
+        let stones = 0;
+        for (let k = 0; k < times; k++) {
+          stones += (useFirst && k === 0) ? PACKS[i].first : PACKS[i].normal;
+        }
+        const cost = times * PACKS[i].price;
+
+        paidStone += stones;
+        paidCost += cost;
+        document.getElementById("packSub" + idx).textContent = stones + " 源石 / ￥" + cost;
+      }
+
+      document.getElementById("paidStone").textContent = paidStone;
+      document.getElementById("paidCost").textContent = "￥" + paidCost;
+
+      const paidStoneBox = document.getElementById("paidStoneTagBox");
+      if (paidStone > 0) {
+        document.getElementById("paidStoneTag").textContent = paidStone;
+        paidStoneBox.style.display = "inline-flex";
+      } else {
+        paidStoneBox.style.display = "none";
+      }
+
+      // ---------------- 2.8 凭证交易所 ----------------
+      // 可兑换次数上限 = 时间范围内有几个“1号”
+      const maxCertCount = getFirstDayCount(today, end);
+      document.getElementById("greenMaxCount").textContent = maxCertCount;
+      document.getElementById("yellowMaxCount").textContent = maxCertCount;
+
+      // 绿票商店：勾选后按“可兑换次数”计算；未勾选或次数为 0 时无任何收益
+      const greenChecked = document.getElementById("greenCertCheck").checked;
+      const greenCount = greenChecked ? maxCertCount : 0;
+
+      // 黄票商店：勾选后按手填的“兑换次数”计算（不超过可兑换次数）；未勾选或次数为 0 时无任何收益
+      let yellowCount = 0;
+      if (document.getElementById("yellowCertCheck").checked) {
+        const input = document.getElementById("yellowInput");
+        let yVal = Number(input.value) || 0;
+        const hint = document.getElementById("yellowHint");
+
+        if (yVal > maxCertCount) {
+          yVal = maxCertCount;
+          input.value = maxCertCount;
+          hint.style.display = "block";
+        } else {
+          hint.style.display = "none";
+        }
+        yellowCount = Math.max(0, yVal);
+      }
+
+      // 单次兑换的固定收益与消耗（一阶段 2 张寻访凭证 + 6 个 100 合成玉 + 二阶段 2 张寻访凭证）
+      const GREEN_TICKET_COST_PER_EXCHANGE  = 240 * 2 + 40 * 6 + 450 * 2; // 1620 张绿票
+      const GREEN_JADE_PER_EXCHANGE         = 6 * 100;                    // 600 合成玉
+      const GREEN_VOUCHER_PER_EXCHANGE      = 2 + 2;                      // 4 张寻访凭证
+
+      // 黄票商店的单次消耗与产出：258 张黄票 → 38 张寻访凭证
+      const YELLOW_TICKET_COST_PER_EXCHANGE = 258;
+      const YELLOW_VOUCHER_PER_EXCHANGE     = 38;
+
+      // 三阶段合成玉（无限兑换）：二阶段共需 10500 绿票，其中 900（2 张 × 450）已用于二阶段寻访凭证，还需补 9600 才开启
+      const STAGE3_UNLOCK_COST           = 10500 - 450 * 2;                    // 9600 张绿票
+      const STAGE3_TICKETS_PER_EXCHANGE  = 50;                                 // 每份消耗 50 绿票
+      const STAGE3_JADE_PER_EXCHANGE     = 30;                                 // 每份 30 合成玉
+
+      // 绿票详情：次数为 0 时全部显示 0
+      document.getElementById("greenExchangeCount").textContent = greenCount;
+      document.getElementById("greenTicketCost").textContent    = GREEN_TICKET_COST_PER_EXCHANGE * greenCount;
+      document.getElementById("greenJadeOut").textContent       = GREEN_JADE_PER_EXCHANGE * greenCount;
+      document.getElementById("greenVoucherOut").textContent    = GREEN_VOUCHER_PER_EXCHANGE * greenCount;
+
+      // ---------------- 2.9 凭证商店收益（与兑换次数挂钩） ----------------
+      // 绿票商店：0 次 → 0 合成玉 / 0 寻访凭证；1 次 → 600 合成玉 / 4 张寻访凭证
+      // 三阶段合成玉：先用 9600 绿票补完二阶段，剩余每 50 绿票换 30 合成玉（只算整份，向下取整）
+      let stage3Jade = 0;
+      if (greenChecked && document.getElementById("stage3Check").checked) {
+        const tickets = Number(document.getElementById("stage3Tickets").value) || 0;
+        const spareTickets = Math.max(0, tickets - STAGE3_UNLOCK_COST);
+        stage3Jade = Math.floor(spareTickets / STAGE3_TICKETS_PER_EXCHANGE) * STAGE3_JADE_PER_EXCHANGE;
+      }
+      document.getElementById("stage3Jade").textContent = stage3Jade;
+
+      const certJade      = GREEN_JADE_PER_EXCHANGE * greenCount + stage3Jade;
+      const greenVouchers = GREEN_VOUCHER_PER_EXCHANGE * greenCount;
+
+      // 黄票商店：每次完整兑换 258 张黄票，兑换 38 张寻访凭证
+      // 阶段兑换只作用于最后一次兑换：各级累加，1~5 级合计 38 张 / 258 张黄票
+      const LEVEL_DATA = [
+        { add: 1,  cost: 10 },    // 1 级 → 累计 1 张 / 10 票
+        { add: 2,  cost: 18 },    // 2 级 → 累计 3 张 / 28 票
+        { add: 5,  cost: 30 },    // 3 级 → 累计 8 张 / 58 票
+        { add: 10, cost: 60 },    // 4 级 → 累计 18 张 / 118 票
+        { add: 20, cost: 140 }    // 5 级 → 累计 38 张 / 258 票
+      ];
+      const levelOn = document.getElementById("levelCheck").checked;
+
+      // 已勾选的最高等级 + 各级标签（标签直接显示累计张数）
+      let maxLevel = 0;
+      for (let i = 1; i <= 5; i++) {
+        if (document.getElementById("level" + i).checked) maxLevel = i;
+      }
+
+      let levelVouchers = 0;
+      let levelCost = 0;
+      let cumVouchers = 0;
+      let cumCost = 0;
+      for (let i = 0; i < 5; i++) {
+        cumVouchers += LEVEL_DATA[i].add;
+        cumCost += LEVEL_DATA[i].cost;
+        if (i + 1 <= maxLevel) {
+          levelVouchers = cumVouchers;
+          levelCost = cumCost;
+        }
+        document.getElementById("levelLabel" + (i + 1)).textContent = (i + 1) + " 级 · " + cumVouchers + " 张";
+      }
+
+      let yellowVouchers = 0;
+      let yellowFullTimes = 0;      // 完整兑换（258 黄票 / 38 张）的次数
+      let yellowTotalCost = 0;      // 黄票总消耗（含阶段兑换那一份）
+      if (yellowCount > 0) {
+        if (levelOn) {
+          yellowFullTimes = yellowCount - 1;
+          yellowVouchers = yellowFullTimes * YELLOW_VOUCHER_PER_EXCHANGE + levelVouchers;
+          yellowTotalCost = yellowFullTimes * YELLOW_TICKET_COST_PER_EXCHANGE + levelCost;
+        } else {
+          yellowFullTimes = yellowCount;
+          yellowVouchers = yellowFullTimes * YELLOW_VOUCHER_PER_EXCHANGE;
+          yellowTotalCost = yellowFullTimes * YELLOW_TICKET_COST_PER_EXCHANGE;
+        }
+      }
+
+      document.getElementById("levelVoucherOut").textContent = yellowCount > 0 ? levelVouchers : 0;
+      document.getElementById("levelTicketCost").textContent = yellowCount > 0 ? levelCost : 0;
+      document.getElementById("yellowFullTimes").textContent = yellowFullTimes;
+      document.getElementById("yellowVoucherOut").textContent = yellowVouchers;
+      document.getElementById("yellowTicketCost").textContent = yellowTotalCost;
+
+      // 更新绿票商店合成玉标签
+      const certJadeBox = document.getElementById("certJadeTagBox");
+      if (certJade > 0) {
+        document.getElementById("certJadeTag").textContent = certJade;
+        certJadeBox.style.display = "inline-flex";
+      } else {
+        certJadeBox.style.display = "none";
+      }
+
+      gainJade += certJade;
+      document.getElementById("result").textContent = gainJade;
+
+      // ---------------- 3. 资源与总数 ----------------
+      const a = Number(document.getElementById("a").value) || 0;
+      const b = Number(document.getElementById("b").value) || 0;
+      const voucherNow = Number(document.getElementById("voucher").value) || 0;
+      
+      // 可获得源石 = 月卡源石 + 隐藏源石 + 氪金源石
+      const bGain = monthlyStone + hiddenStone + paidStone;
+      document.getElementById("bGain").textContent = bGain;
+
+      // 源石总数 = 现有源石 + 可获得源石
+      const stoneTotal = b + bGain;
+      // 可换合成玉数
+      const stoneToJade = stoneTotal * 180;
+      // 可换抽数 = 可换合成玉数 / 600，保留 1 位小数
+      const stoneToPulls = (stoneToJade / 600).toFixed(1);
+
+      let jadeTotal = a + gainJade;
+
+      if (document.getElementById("crush").checked) {
+        jadeTotal += stoneToJade;
+      }
+
+      // 可兑换的抽数 = 合成玉总数 / 600，向下取整
+      const jadePulls = Math.floor(jadeTotal / 600);
+
+      // 寻访凭证总数 = 现有寻访凭证 + 绿票商店 + 黄票商店
+      const voucherTotal = voucherNow + greenVouchers + yellowVouchers;
+
+      // 总抽数 = 合成玉抽数 + 寻访凭证抽数（1 张寻访凭证 = 1 抽）
+      const totalPulls = jadePulls + voucherTotal;
+
+      document.getElementById("jadeTotal").textContent    = jadeTotal;
+      document.getElementById("jadeToPulls").textContent  = jadePulls;
+      document.getElementById("stoneTotal").textContent   = stoneTotal;
+      document.getElementById("stoneToJade").textContent  = stoneToJade;
+      document.getElementById("stoneToPulls").textContent = stoneToPulls;
+
+      // 寻访凭证明细与总数
+      document.getElementById("voucherNowTag").textContent    = voucherNow;
+      document.getElementById("voucherGreenTag").textContent  = greenVouchers;
+      document.getElementById("voucherYellowTag").textContent = yellowVouchers;
+      document.getElementById("voucherTotal").textContent     = voucherTotal;
+
+      // 总抽数
+      document.getElementById("jadePullPart").textContent    = jadePulls;
+      document.getElementById("voucherPullPart").textContent = voucherTotal;
+      document.getElementById("pullCount").textContent       = totalPulls;
+    }
+
+    // 页面加载完成后自动计算一次
+    window.onload = calc;
+  </script>
+</body>
+</html>
